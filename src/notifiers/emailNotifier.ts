@@ -12,7 +12,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Opinion:     "#d97706",
   Security:    "#b91c1c",
   Tutorial:    "#059669",
-  Other:       "#6b7280",
+  Miscellaneous:  "#6b7280",
 };
 
 const SENTIMENT_COLORS: Record<string, { bg: string; text: string; label: string }> = {
@@ -52,7 +52,7 @@ function buildArticleRow(a: Article): string {
         ${a.summary ?? a.excerpt}
       </p>
       <div style="font-size:12px;color:#9ca3af;">
-        ${sourceLine} &nbsp;·&nbsp; ${a.publishedAt.toUTCString()}
+        ${sourceLine} &nbsp;·&nbsp; ${a.publishedAt.toLocaleString()}
       </div>
     </td>
   </tr>`;
@@ -100,7 +100,7 @@ function buildHtmlEmail(articles: Article[], config: AppConfig): string {
       ${body}
     </table>
     <p style="margin-top:32px;font-size:12px;color:#9ca3af;text-align:center;">
-      Sent by Tech News Notifier &nbsp;·&nbsp; disable with EMAIL_ENABLED=false
+      Sent by Tech News Notifier &nbsp;·&nbsp; Made with ❤️
     </p>
   </div>
 </body>
@@ -153,10 +153,7 @@ export async function sendEmailNotification(
     });
 
     const uniqueSources = [...new Set(articles.map((a) => a.source))].slice(0, 3);
-    const subject =
-      articles.length === 1
-        ? `[Tech News] ${articles[0].title}`
-        : `[Tech News] ${articles.length} new articles from ${uniqueSources.join(", ")}`;
+    const subject = `[Tech News] ${articles.length} new ${articles.length === 1 ? "article" : "articles"} from ${uniqueSources.join(", ")}`;
 
     await transporter.sendMail({
       from: email.from,

@@ -7,7 +7,7 @@ export interface ArticleGroup {
 
 /**
  * Groups articles by their source name (used when AI is disabled).
- * Sources smaller than minGroupSize are collapsed into "Other".
+ * Sources smaller than minGroupSize are collapsed into "Miscellaneous".
  */
 function groupBySource(articles: Article[], minGroupSize: number): ArticleGroup[] {
   const map = new Map<string, Article[]>();
@@ -34,7 +34,7 @@ function groupBySource(articles: Article[], minGroupSize: number): ArticleGroup[
   mainGroups.sort((a, b) => b.articles.length - a.articles.length);
 
   if (otherArticles.length > 0) {
-    mainGroups.push({ topic: "Other", articles: otherArticles });
+    mainGroups.push({ topic: "Miscellaneous", articles: otherArticles });
   }
 
   return mainGroups;
@@ -43,16 +43,16 @@ function groupBySource(articles: Article[], minGroupSize: number): ArticleGroup[
 /**
  * Groups articles by their primary AI-assigned topic (topics[0]).
  *
- * - Articles with no topics are placed in "Other".
- * - Groups smaller than minGroupSize are collapsed into "Other".
+ * - Articles with no topics are placed in "Miscellaneous".
+ * - Groups smaller than minGroupSize are collapsed into "Miscellaneous".
  * - Groups are returned sorted by size descending (most active topic first),
- *   with "Other" always last.
+ *   with "Miscellaneous" always last.
  *
  * When AI is disabled and no articles have topics[], returns a single group
  * containing all articles (flat, current behaviour — no grouping).
  *
  * @param articles     - enriched articles
- * @param minGroupSize - groups below this size are merged into "Other"
+ * @param minGroupSize - groups below this size are merged into "Miscellaneous"
  */
 export function groupArticlesByTopic(
   articles: Article[],
@@ -67,7 +67,7 @@ export function groupArticlesByTopic(
   // Normalise primary topic to title-case
   function primaryTopic(a: Article): string {
     const raw = a.topics?.[0]?.trim();
-    if (!raw) return "Other";
+    if (!raw) return "Miscellaneous";
     return raw.replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
@@ -80,10 +80,10 @@ export function groupArticlesByTopic(
   }
 
   const mainGroups: ArticleGroup[] = [];
-  const otherArticles: Article[] = map.get("Other") ?? [];
+  const otherArticles: Article[] = map.get("Miscellaneous") ?? [];
 
   for (const [topic, groupArticles] of map.entries()) {
-    if (topic === "Other") continue;
+    if (topic === "Miscellaneous") continue;
 
     if (groupArticles.length < minGroupSize) {
       // Too small — collapse into Other
@@ -98,7 +98,7 @@ export function groupArticlesByTopic(
 
   // Append Other last (if non-empty)
   if (otherArticles.length > 0) {
-    mainGroups.push({ topic: "Other", articles: otherArticles });
+    mainGroups.push({ topic: "Miscellaneous", articles: otherArticles });
   }
 
   return mainGroups;

@@ -24,13 +24,13 @@ interface AIEnrichment {
 }
 
 const VALID_CATEGORIES = new Set<ArticleCategory>([
-  "Breaking", "Release", "Deep Dive", "Opinion", "Security", "Tutorial", "Other",
+  "Breaking", "Release", "Deep Dive", "Opinion", "Security", "Tutorial", "Miscellaneous",
 ]);
 
 const VALID_SENTIMENTS = new Set<ArticleSentiment>(["positive", "negative", "neutral"]);
 
 function coerceCategory(raw: any): ArticleCategory {
-  return VALID_CATEGORIES.has(raw) ? (raw as ArticleCategory) : "Other";
+  return VALID_CATEGORIES.has(raw) ? (raw as ArticleCategory) : "Miscellaneous";
 }
 
 function coerceSentiment(raw: any): ArticleSentiment {
@@ -90,14 +90,14 @@ async function enrichChunk(
       Good: "OpenAI released GPT-5 with a 1M token context window, available via API immediately. Key improvements include 3× faster inference and a new reasoning mode. Priced at $15/1M input tokens."
       Bad: "An article about OpenAI's new model announcement."
 
-    - "category": one of exactly ["Breaking","Release","Deep Dive","Opinion","Security","Tutorial","Other"]
+    - "category": one of exactly ["Breaking","Release","Deep Dive","Opinion","Security","Tutorial","Miscellaneous"]
       Breaking   = urgent news, incidents, outages, major announcements happening now
       Release    = new version, product launch, open-source publish, API update
       Deep Dive  = long-form technical analysis, research paper, architecture post
       Opinion    = editorial, hot take, personal perspective, predictions
       Security   = CVE, vulnerability, breach, exploit, patch advisory
       Tutorial   = how-to, step-by-step guide, code walkthrough
-      Other      = anything that does not fit the above
+      Miscellaneous = anything that does not fit the above
 
     - "relevanceScore": integer 1–10 — score how relevant this article is to: ${relevanceContext}
       10 = core topic, directly useful

@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   Opinion:     "*[Opinion]*",
   Security:    "*[Security]*",
   Tutorial:    "*[Tutorial]*",
-  Other:       "*[Other]*",
+  Miscellaneous:  "*[Miscellaneous]*",
 };
 
 const SENTIMENT_EMOJI: Record<string, string> = {
