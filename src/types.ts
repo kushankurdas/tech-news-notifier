@@ -5,7 +5,7 @@ export type ArticleCategory =
   | "Opinion"
   | "Security"
   | "Tutorial"
-  | "Other";
+  | "Miscellaneous";
 
 export type ArticleSentiment = "positive" | "negative" | "neutral";
 
