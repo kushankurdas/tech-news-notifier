@@ -264,7 +264,7 @@ export async function sendSlackNotification(
   // ── Send intro ────────────────────────────────────────────────────────────
   let parentTs: string | undefined;
 
-  if (isGrouped && (trending.length > 0 || groups.length > 1)) {
+  if (useThreads || (trending.length > 0 && isGrouped) || groups.length > 1) {
     try {
       parentTs = await sendBlocks(
         config,

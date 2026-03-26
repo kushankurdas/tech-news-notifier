@@ -51,7 +51,8 @@ export async function fetchRssFeed(source: SourceConfig): Promise<Article[]> {
       const url = item.link ?? item.guid ?? "";
       if (!url) continue;
 
-      const excerpt = toExcerpt(item.contentSnippet ?? item.content ?? item.summary ?? "");
+      const rawExcerpt = toExcerpt(item.contentSnippet ?? item.content ?? item.summary ?? "");
+      const excerpt = /^comments?\b/i.test(rawExcerpt) ? "" : rawExcerpt;
 
       articles.push({
         id: hashUrl(url),
