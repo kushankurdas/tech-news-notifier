@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  tech-news-notifier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tech-news-notifier
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Persist seen-articles store across restarts
+      - notifier-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DATA_DIR=/app/data
+    # Optional: resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  notifier-data:
+    driver: local

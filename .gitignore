@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/
+.env
+.env.*
+!.env.example
+*.js.map
+notes.txt
+.omc
+.claude

@@ -1,0 +1,31 @@
+{
+  "name": "tech-news-notifier",
+  "version": "1.0.0",
+  "description": "Real-time tech news aggregator with Email & Slack notifications",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.3.1",
+    "nodemailer": "^8.0.4",
+    "openai": "^4.20.0",
+    "rss-parser": "^3.13.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^20.10.0",
+    "@types/nodemailer": "^7.0.11",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^10.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.2"
+  }
+}
