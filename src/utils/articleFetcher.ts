@@ -50,23 +50,44 @@ async function fetchArticleBody(url: string): Promise<string | null> {
     $("script, style, noscript, nav, header, footer, aside, .ad, .ads, .advertisement, " +
       ".sidebar, .related, .comments, [aria-hidden=true]").remove();
 
-    // Try common article content selectors in priority order
-    const selectors = [
-      "article",
-      '[role="main"]',
-      ".article-body",
-      ".post-content",
-      ".entry-content",
-      ".content-body",
-      "main",
+    // Try paragraph-scoped selectors first — avoids title/date/tag noise at the top of articles
+    const paragraphSelectors = [
+      "article p",
+      '[role="main"] p',
+      ".article-body p",
+      ".post-content p",
+      ".entry-content p",
+      ".content-body p",
+      "main p",
     ];
 
     let text = "";
-    for (const sel of selectors) {
-      const el = $(sel);
-      if (el.length) {
-        text = el.text();
-        break;
+    for (const sel of paragraphSelectors) {
+      const els = $(sel);
+      if (els.length) {
+        text = els.map((_, el) => $(el).text()).get().join(" ");
+        if (text.trim().length >= 50) break;
+        text = ""; // too short — likely empty paragraphs, try next
+      }
+    }
+
+    // Fall back to full container text if no paragraphs found
+    if (!text) {
+      const containerSelectors = [
+        "article",
+        '[role="main"]',
+        ".article-body",
+        ".post-content",
+        ".entry-content",
+        ".content-body",
+        "main",
+      ];
+      for (const sel of containerSelectors) {
+        const el = $(sel);
+        if (el.length) {
+          text = el.text();
+          break;
+        }
       }
     }
 
@@ -99,7 +120,7 @@ export async function enrichWithFullArticles(articles: Article[]): Promise<Artic
 
     for (let j = 0; j < batch.length; j++) {
       const result = bodies[j];
-      if (result.status === "fulfilled" && result.value && result.value.length > batch[j].excerpt.length) {
+      if (result.status === "fulfilled" && result.value && result.value.length >= 100 && result.value.length > batch[j].excerpt.length) {
         results[i + j] = { ...batch[j], excerpt: result.value };
       }
     }

@@ -13,14 +13,21 @@ async function getOpenAIClient(apiKey: string): Promise<any> {
 
 /**
  * Per-article result returned by the combined AI call.
+ * Note: summary is NOT included — it is derived from the article excerpt directly.
  */
 interface AIEnrichment {
-  summary: string;
   category: ArticleCategory;
   sentiment: ArticleSentiment;
   relevanceScore: number;
   topics: string[];
   clusterId: number;
+}
+
+/** Returns the first 100 words of text, appending … if truncated. */
+function toFirst100Words(text: string): string {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const slice = words.slice(0, 100);
+  return slice.join(" ") + (words.length > 100 ? "…" : "");
 }
 
 const VALID_CATEGORIES = new Set<ArticleCategory>([
@@ -50,7 +57,7 @@ function coerceSentiment(raw: any): ArticleSentiment {
 function fallbackEnrichment(articles: Article[]): Article[] {
   return articles.map((a, i) => ({
     ...a,
-    summary: a.excerpt || a.title,
+    summary: toFirst100Words(a.excerpt || a.title),
     category: undefined,
     relevanceScore: 10,
     topics: [],
@@ -79,16 +86,12 @@ async function enrichChunk(
 
   const relevanceContext = config.ai.userContext || config.ai.topicFilter;
 
-  const systemMessage = 
+  const systemMessage =
   `
     You are a tech news analyst processing a batch of articles for a software engineering audience.
     Given a list of numbered articles, return a JSON array with one object per article, in the same order.
 
     Each object must have exactly these fields:
-
-    - "summary": string — max 100 words. State WHAT HAPPENED and the key details, not just what the article is about.
-      Good: "OpenAI released GPT-5 with a 1M token context window, available via API immediately. Key improvements include 3× faster inference and a new reasoning mode. Priced at $15/1M input tokens."
-      Bad: "An article about OpenAI's new model announcement."
 
     - "category": one of exactly ["Breaking","Release","Deep Dive","Opinion","Security","Tutorial","Miscellaneous"]
       Breaking   = urgent news, incidents, outages, major announcements happening now
@@ -143,7 +146,7 @@ async function enrichChunk(
     const e = enrichments[i];
     return {
       ...a,
-      summary: e?.summary ?? a.excerpt ?? a.title,
+      summary: toFirst100Words(a.excerpt || a.title),
       category: coerceCategory(e?.category),
       sentiment: coerceSentiment(e?.sentiment),
       relevanceScore: typeof e?.relevanceScore === "number"
