@@ -96,9 +96,31 @@ export function groupArticlesByTopic(
   // Sort main groups by size descending
   mainGroups.sort((a, b) => b.articles.length - a.articles.length);
 
-  // Append Other last (if non-empty)
-  if (otherArticles.length > 0) {
-    mainGroups.push({ topic: "Miscellaneous", articles: otherArticles });
+  // Split overflow articles by their AI category rather than dumping them all
+  // into one Miscellaneous group (e.g. Breaking/Security/Release get own sections)
+  const CATEGORY_ORDER = ["Breaking", "Security", "Release", "Tutorial", "Deep Dive", "Opinion"];
+  const categoryBuckets = new Map<string, Article[]>();
+  const trueOther: Article[] = [];
+
+  for (const a of otherArticles) {
+    const cat = a.category;
+    if (cat && cat !== "Miscellaneous" && CATEGORY_ORDER.includes(cat)) {
+      if (!categoryBuckets.has(cat)) categoryBuckets.set(cat, []);
+      categoryBuckets.get(cat)!.push(a);
+    } else {
+      trueOther.push(a);
+    }
+  }
+
+  for (const cat of CATEGORY_ORDER) {
+    const arts = categoryBuckets.get(cat);
+    if (arts && arts.length > 0) {
+      mainGroups.push({ topic: cat, articles: arts });
+    }
+  }
+
+  if (trueOther.length > 0) {
+    mainGroups.push({ topic: "Miscellaneous", articles: trueOther });
   }
 
   return mainGroups;

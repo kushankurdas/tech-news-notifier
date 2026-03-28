@@ -15,6 +15,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATA_DIR=/app/data
+      - TZ=Asia/Kolkata
     # Optional: resource limits
     deploy:
       resources:
