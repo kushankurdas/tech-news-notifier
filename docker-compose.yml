@@ -1,6 +1,28 @@
 version: "3.9"
 
 services:
+  # OpenAI-compatible LLM for local inference. Not started by default — use profile llm-local:
+  #   docker compose --profile llm-local up -d --build
+  # Then pull a model: docker compose exec ollama ollama pull llama3.1
+  # In .env set OPENAI_BASE_URL=http://ollama:11434/v1 and OPENAI_MODEL to match the pull.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tech-news-ollama
+    profiles: ["llm-local"]
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Linux + NVIDIA: install nvidia-container-toolkit on the host, then uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
   tech-news-notifier:
     build:
       context: .
@@ -25,4 +47,6 @@ services:
 
 volumes:
   notifier-data:
+    driver: local
+  ollama-data:
     driver: local

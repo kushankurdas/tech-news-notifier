@@ -38,7 +38,11 @@ async function main(): Promise<void> {
   }
 
   logger.info(
-    `AI: ${config.ai.enabled ? `enabled (${config.ai.model})` : "disabled (using excerpts)"}`
+    `AI: ${
+      config.ai.enabled
+        ? `enabled (${config.ai.model}${config.ai.openaiBaseUrl ? ` @ ${config.ai.openaiBaseUrl}` : ""})`
+        : "disabled (using excerpts)"
+    }`
   );
 
   if (config.fetchFullArticles) {

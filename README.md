@@ -31,7 +31,7 @@ Adding more sources is a one-liner in `src/config.ts`.
 - **Age filtering** — only process articles published within a configurable window
 - **Blocklist filtering** — drop articles matching keywords (sponsored, deals, etc.)
 - Deduplication — Jaccard similarity + optional AI semantic dedup so you never see the same story twice
-- **AI pipeline** (optional, via OpenAI):
+- **AI pipeline** (optional, via OpenAI or any OpenAI-compatible API — e.g. Ollama, LM Studio, vLLM):
   - **Personalized relevance scoring** — describe your role in `AI_USER_CONTEXT` and the AI calibrates scores to your specific interests
   - **Rising topic detection** — flags topics with a ≥3× spike vs their rolling average, shown in Slack digest intro
   - Category labels (`Breaking`, `Release`, `Deep Dive`, `Opinion`, `Security`, `Tutorial`)
@@ -39,7 +39,7 @@ Adding more sources is a one-liner in `src/config.ts`.
   - Trending topic extraction
   - Story grouping with semantic deduplication
   - Enhanced AI summaries — up to 100 words with calibrated relevance anchors
-- Summaries via OpenAI or auto-extracted excerpts as fallback
+- Summaries via LLM (OpenAI-compatible) or auto-extracted excerpts as fallback
 - Full article fetching for richer AI summaries (optional)
 - Rich HTML emails + Slack Block Kit messages
 - **Slack threading** — post topic groups as thread replies (requires Bot Token)
@@ -61,6 +61,93 @@ cp .env.example .env
 docker compose up -d --build
 docker compose logs -f   # tail logs
 ```
+
+#### Ollama (local open-weight LLM)
+
+The app speaks any **OpenAI-compatible** `/v1/chat/completions` API. [Ollama](https://ollama.com) is the usual choice for self-hosted inference. You do **not** need `OPENAI_API_KEY` for a default local Ollama server (a placeholder is sent).
+
+Pick **one** of the setups below and set `OPENAI_MODEL` to a tag you have pulled (examples use `llama3.1`).
+
+| Setup | `OPENAI_BASE_URL` in `.env` |
+|--------|-----------------------------|
+| Notifier + Ollama **both** in Docker Compose | `http://ollama:11434/v1` |
+| Notifier on the **host** (`npm run dev` / `npm start`), Ollama on the **host** | `http://localhost:11434/v1` |
+| Notifier **in Docker**, Ollama **on the host** (e.g. Ollama desktop) | `http://host.docker.internal:11434/v1` (Mac/Win Docker Desktop; see Linux note below) |
+
+**Verify Ollama is up:** `curl -s http://localhost:11434/api/tags` (from the host) should return JSON listing models.
+
+##### A. Ollama in Docker (Compose)
+
+[`docker-compose.yml`](docker-compose.yml) defines an optional `ollama` service. It is **not** started unless you use the `llm-local` profile.
+
+1. In `.env`:
+
+   ```env
+   OPENAI_BASE_URL=http://ollama:11434/v1
+   OPENAI_MODEL=llama3.1
+   ```
+
+2. Start notifier + Ollama:
+
+   ```bash
+   docker compose --profile llm-local up -d --build
+   ```
+
+3. Pull a model **inside** the Ollama container (repeat when you change `OPENAI_MODEL`):
+
+   ```bash
+   docker compose exec ollama ollama pull llama3.1
+   ```
+
+Weights live in the `ollama-data` volume. Port **11434** is mapped to the host so you can debug or run `ollama` CLI against `localhost:11434` if needed.
+
+**GPU (Linux + NVIDIA):** install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), then uncomment the `deploy.resources.reservations.devices` block under `ollama` in [`docker-compose.yml`](docker-compose.yml). On **macOS**, Ollama inside Docker is usually **CPU-only**; for Apple Silicon GPU use **Ollama on the host** (section B) or mixed Docker + host Ollama (section C).
+
+##### B. Ollama on your machine (no Docker for the LLM)
+
+Best when you use the **Ollama desktop app** or `ollama serve` and run the notifier with Node on the same machine.
+
+1. Install Ollama from [ollama.com](https://ollama.com) and start it.
+2. Pull a model:
+
+   ```bash
+   ollama pull llama3.1
+   ```
+
+3. In `.env`:
+
+   ```env
+   OPENAI_BASE_URL=http://localhost:11434/v1
+   OPENAI_MODEL=llama3.1
+   ```
+
+4. Run the notifier on the host:
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+   Or after `npm run build`: `npm start`.
+
+##### C. Notifier in Docker, Ollama on the host
+
+Use this when the notifier runs in Compose but Ollama runs as a **separate** app on your machine (common on Mac with the Ollama app).
+
+1. Do **not** enable the `llm-local` profile (only the notifier container):
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+2. In `.env`:
+
+   ```env
+   OPENAI_BASE_URL=http://host.docker.internal:11434/v1
+   OPENAI_MODEL=llama3.1
+   ```
+
+On **Linux**, `host.docker.internal` is not always defined. You can add to the `tech-news-notifier` service in Compose: `extra_hosts: - "host.docker.internal:host-gateway"`, or set `OPENAI_BASE_URL` to your host LAN IP (e.g. `http://192.168.1.10:11434/v1`).
 
 ### 3. Run locally (development)
 
@@ -107,7 +194,7 @@ Sources (parallel fetch)
  Jaccard dedup (group near-duplicate titles by word-set similarity ≥ 0.45)
         │
         ▼
- AI enrichment (batched OpenAI call → summary, category, sentiment,
+ AI enrichment (batched chat completions → summary, category, sentiment,
                 relevanceScore, topics, clusterId per article)
         │
         ▼
@@ -153,7 +240,7 @@ src/
 │   └── slackNotifier.ts  Builds Slack Block Kit payload; supports webhook and bot token + threading
 │
 └── utils/
-    ├── summarizer.ts     OpenAI enrichment — batched in chunks of 50 articles per API call
+    ├── summarizer.ts     LLM enrichment (OpenAI-compatible) — batched in chunks of 50 articles per call
     ├── deduplicator.ts   Jaccard title dedup + AI cluster dedup (applyAIClusters)
     ├── scorer.ts         Filters articles below the relevance threshold
     ├── filters.ts        Blocklist, language, and paywall filters
@@ -198,7 +285,9 @@ data/                     Runtime data directory (auto-created, gitignored)
 
 ### AI Enrichment Details
 
-When `OPENAI_API_KEY` is set, `enrichArticles()` sends articles to OpenAI in batches of 50 (to stay within token limits). A single structured prompt requests all fields at once — summary, category, sentiment, relevanceScore, topics, and clusterId — to minimise API calls.
+When `OPENAI_API_KEY` and/or `OPENAI_BASE_URL` is set, `enrichArticles()` sends articles to the configured endpoint in batches of 50 (to stay within token limits). A single structured prompt requests all fields at once — summary, category, sentiment, relevanceScore, topics, and clusterId — to minimise API calls.
+
+**Local / open-weight models (e.g. Ollama):** set `OPENAI_BASE_URL=http://localhost:11434/v1` and `OPENAI_MODEL` to your model tag (e.g. `llama3.1`). You can omit `OPENAI_API_KEY` for typical local setups; a placeholder is used automatically.
 
 The `clusterId` field drives the second dedup pass: articles sharing the same cluster ID are merged into one representative story (the one with the longest excerpt), with source names combined. This catches semantically duplicate stories that Jaccard misses due to differently-worded headlines.
 
@@ -276,8 +365,9 @@ All config is via environment variables (see `.env.example`).
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | — | OpenAI key — enables all AI features when set |
-| `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model to use |
+| `OPENAI_API_KEY` | — | API key for OpenAI or compatible servers — enables AI when set (optional if `OPENAI_BASE_URL` alone is enough for your server) |
+| `OPENAI_BASE_URL` | _(unset)_ | OpenAI-compatible API root — enables AI when set. Ollama examples: `http://localhost:11434/v1` (host Node + host Ollama), `http://ollama:11434/v1` (Compose + Ollama container), `http://host.docker.internal:11434/v1` (Compose notifier + host Ollama). See **Ollama (local open-weight LLM)** under Quick Start |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model name (OpenAI ID or local tag such as `llama3.1`) |
 | `AI_USER_CONTEXT` | _(empty)_ | Describe your role and interests — AI uses this to personalize relevance scores. When set, `AI_TOPIC_FILTER` is ignored. |
 | `AI_TOPIC_FILTER` | `software engineering,...` | Fallback topic list for relevance scoring, used only when `AI_USER_CONTEXT` is not set |
 | `AI_RELEVANCE_THRESHOLD` | `5` | Minimum relevance score (1–10) to include an article |

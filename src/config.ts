@@ -151,17 +151,24 @@ export function loadConfig(): AppConfig {
       },
     },
 
-    ai: {
-      enabled: !!optionalEnv("OPENAI_API_KEY"),
-      openaiApiKey: optionalEnv("OPENAI_API_KEY"),
-      model: optionalEnv("OPENAI_MODEL", "gpt-4o-mini"),
-      topicFilter: optionalEnv(
-        "AI_TOPIC_FILTER",
-        "software engineering, AI/ML, cloud infrastructure, developer tools, cybersecurity, open source"
-      ),
-      userContext: optionalEnv("AI_USER_CONTEXT", ""),
-      relevanceThreshold: parseInt(optionalEnv("AI_RELEVANCE_THRESHOLD", "5"), 10),
-      minGroupSize: parseInt(optionalEnv("AI_MIN_GROUP_SIZE", "2"), 10),
-    },
+    ai: (() => {
+      const openaiBaseUrl = optionalEnv("OPENAI_BASE_URL").trim().replace(/\/$/, "");
+      const openaiApiKeyRaw = optionalEnv("OPENAI_API_KEY").trim();
+      const enabled = !!(openaiApiKeyRaw || openaiBaseUrl);
+      const openaiApiKey = openaiApiKeyRaw || (openaiBaseUrl ? "ollama" : "");
+      return {
+        enabled,
+        openaiApiKey,
+        openaiBaseUrl,
+        model: optionalEnv("OPENAI_MODEL", "gpt-4o-mini"),
+        topicFilter: optionalEnv(
+          "AI_TOPIC_FILTER",
+          "software engineering, AI/ML, cloud infrastructure, developer tools, cybersecurity, open source"
+        ),
+        userContext: optionalEnv("AI_USER_CONTEXT", ""),
+        relevanceThreshold: parseInt(optionalEnv("AI_RELEVANCE_THRESHOLD", "5"), 10),
+        minGroupSize: parseInt(optionalEnv("AI_MIN_GROUP_SIZE", "2"), 10),
+      };
+    })(),
   };
 }

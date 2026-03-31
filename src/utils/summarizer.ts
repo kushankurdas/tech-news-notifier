@@ -2,11 +2,16 @@ import { Article, ArticleCategory, ArticleSentiment, AppConfig } from "../types"
 import { logger } from "./logger";
 
 let openaiClient: any = null;
+let clientCacheKey = "";
 
-async function getOpenAIClient(apiKey: string): Promise<any> {
-  if (!openaiClient) {
+async function getOpenAIClient(apiKey: string, baseURL?: string): Promise<any> {
+  const key = `${apiKey}\0${baseURL ?? ""}`;
+  if (!openaiClient || clientCacheKey !== key) {
     const { OpenAI } = await import("openai");
-    openaiClient = new OpenAI({ apiKey });
+    openaiClient = new OpenAI(
+      baseURL ? { apiKey, baseURL } : { apiKey }
+    );
+    clientCacheKey = key;
   }
   return openaiClient;
 }
@@ -66,12 +71,12 @@ function fallbackEnrichment(articles: Article[]): Article[] {
   }));
 }
 
-// Max articles per OpenAI call — keeps completion tokens well within the 16k limit
+// Max articles per LLM call — keeps completion tokens well within typical context limits
 // (50 articles × ~120 tokens each = ~6000 tokens, leaving headroom for input tokens)
 const AI_CHUNK_SIZE = 50;
 
 /**
- * Runs one OpenAI enrichment call for a single chunk of articles.
+ * Runs one chat-completions enrichment call for a single chunk of articles.
  * clusterOffset ensures clusterIds are globally unique across chunks.
  */
 async function enrichChunk(
@@ -173,12 +178,13 @@ export async function enrichArticles(
 ): Promise<Array<Article & { _clusterId: number }>> {
   type EnrichedArticle = Article & { _clusterId: number };
 
-  if (!config.ai.enabled || !config.ai.openaiApiKey) {
+  if (!config.ai.enabled) {
     return fallbackEnrichment(articles) as EnrichedArticle[];
   }
 
   try {
-    const client = await getOpenAIClient(config.ai.openaiApiKey);
+    const baseURL = config.ai.openaiBaseUrl || undefined;
+    const client = await getOpenAIClient(config.ai.openaiApiKey, baseURL);
     const results: EnrichedArticle[] = [];
     const totalChunks = Math.ceil(articles.length / AI_CHUNK_SIZE);
 
