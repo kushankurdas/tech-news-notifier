@@ -99,7 +99,10 @@ export interface AppConfig {
   };
   ai: {
     enabled: boolean;
+    /** API key for api.openai.com or compatible servers (placeholder e.g. ollama when only base URL is set). */
     openaiApiKey: string;
+    /** OpenAI-compatible API root, e.g. http://localhost:11434/v1 for Ollama. Empty = default OpenAI cloud. */
+    openaiBaseUrl: string;
     model: string;
     topicFilter: string;
     userContext: string;
