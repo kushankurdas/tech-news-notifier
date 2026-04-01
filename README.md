@@ -31,7 +31,7 @@ Adding more sources is a one-liner in `src/config.ts`.
 - **Age filtering** — only process articles published within a configurable window
 - **Blocklist filtering** — drop articles matching keywords (sponsored, deals, etc.)
 - Deduplication — Jaccard similarity + optional AI semantic dedup so you never see the same story twice
-- **AI pipeline** (optional, via OpenAI or any OpenAI-compatible API — e.g. Ollama, LM Studio, vLLM):
+- **AI pipeline** (optional): OpenAI (cloud) → Anthropic → OpenAI-compatible local API (e.g. Ollama, LM Studio, vLLM), with automatic fallback when a provider errors:
   - **Personalized relevance scoring** — describe your role in `AI_USER_CONTEXT` and the AI calibrates scores to your specific interests
   - **Rising topic detection** — flags topics with a ≥3× spike vs their rolling average, shown in Slack digest intro
   - Category labels (`Breaking`, `Release`, `Deep Dive`, `Opinion`, `Security`, `Tutorial`)
@@ -285,13 +285,21 @@ data/                     Runtime data directory (auto-created, gitignored)
 
 ### AI Enrichment Details
 
-When `OPENAI_API_KEY` and/or `OPENAI_BASE_URL` is set, `enrichArticles()` sends articles to the configured endpoint in batches of 50 (to stay within token limits). A single structured prompt requests all fields at once — summary, category, sentiment, relevanceScore, topics, and clusterId — to minimise API calls.
+AI is enabled when **any** of `OPENAI_API_KEY`, `OPENAI_BASE_URL`, or `ANTHROPIC_API_KEY` is set. `enrichArticles()` processes articles in batches of 50 (to stay within token limits). A single structured prompt requests summary-related fields at once — category, sentiment, relevanceScore, topics, and clusterId — to minimise API calls (summary text still comes from the excerpt).
 
-**Local / open-weight models (e.g. Ollama):** set `OPENAI_BASE_URL=http://localhost:11434/v1` and `OPENAI_MODEL` to your model tag (e.g. `llama3.1`). You can omit `OPENAI_API_KEY` for typical local setups; a placeholder is used automatically.
+**Provider fallback order** (per poll cycle, the first provider that completes **all** chunks without error wins; otherwise the next is tried):
+
+1. **OpenAI (official cloud)** — `OPENAI_API_KEY` is set **and** `OPENAI_BASE_URL` is **unset**. Uses `OPENAI_MODEL` against `api.openai.com`.
+2. **Anthropic** — `ANTHROPIC_API_KEY` is set. Uses `ANTHROPIC_MODEL` (default `claude-3-5-haiku-20241022`) via the Messages API.
+3. **OpenAI-compatible local (e.g. Ollama)** — `OPENAI_BASE_URL` is set. Uses the OpenAI SDK with that base URL and `OPENAI_MODEL`. You can omit `OPENAI_API_KEY` for typical Ollama setups; a placeholder key is sent.
+
+**Caveat:** Custom OpenAI-compatible hosts that **require** a base URL (e.g. Azure OpenAI) are tried in **step 3**, so Anthropic in step 2 may run first if both `ANTHROPIC_API_KEY` and `OPENAI_BASE_URL` are set. Omit `ANTHROPIC_API_KEY` if you only want that custom endpoint after OpenAI cloud.
+
+**Local / open-weight models (e.g. Ollama):** set `OPENAI_BASE_URL` (see **Ollama (local open-weight LLM)** under Quick Start) and `OPENAI_MODEL` to your model tag (e.g. `llama3.1`).
 
 The `clusterId` field drives the second dedup pass: articles sharing the same cluster ID are merged into one representative story (the one with the longest excerpt), with source names combined. This catches semantically duplicate stories that Jaccard misses due to differently-worded headlines.
 
-If AI is disabled or the API call fails, every article gets `relevanceScore: 10` (passes all filters) and `clusterId` equal to its array index (no merging).
+If AI is disabled or **every** configured provider fails, every article gets `relevanceScore: 10` (passes all filters) and `clusterId` equal to its array index (no merging).
 
 ### Adding a New Source
 
@@ -365,9 +373,11 @@ All config is via environment variables (see `.env.example`).
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | — | API key for OpenAI or compatible servers — enables AI when set (optional if `OPENAI_BASE_URL` alone is enough for your server) |
-| `OPENAI_BASE_URL` | _(unset)_ | OpenAI-compatible API root — enables AI when set. Ollama examples: `http://localhost:11434/v1` (host Node + host Ollama), `http://ollama:11434/v1` (Compose + Ollama container), `http://host.docker.internal:11434/v1` (Compose notifier + host Ollama). See **Ollama (local open-weight LLM)** under Quick Start |
-| `OPENAI_MODEL` | `gpt-4o-mini` | Model name (OpenAI ID or local tag such as `llama3.1`) |
+| `OPENAI_API_KEY` | — | OpenAI API key — enables AI when set. Used for **official OpenAI** only when `OPENAI_BASE_URL` is unset (fallback chain step 1). Optional for local-only setups that use only `OPENAI_BASE_URL` |
+| `OPENAI_BASE_URL` | _(unset)_ | OpenAI-compatible API root (fallback step 3). Ollama examples: `http://localhost:11434/v1`, `http://ollama:11434/v1`, `http://host.docker.internal:11434/v1`. See **Ollama** under Quick Start |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model for OpenAI cloud (step 1) and for local compatible API (step 3) |
+| `ANTHROPIC_API_KEY` | — | Anthropic API key — enables fallback step 2 when set |
+| `ANTHROPIC_MODEL` | `claude-3-5-haiku-20241022` | Claude model id for enrichment |
 | `AI_USER_CONTEXT` | _(empty)_ | Describe your role and interests — AI uses this to personalize relevance scores. When set, `AI_TOPIC_FILTER` is ignored. |
 | `AI_TOPIC_FILTER` | `software engineering,...` | Fallback topic list for relevance scoring, used only when `AI_USER_CONTEXT` is not set |
 | `AI_RELEVANCE_THRESHOLD` | `5` | Minimum relevance score (1–10) to include an article |
