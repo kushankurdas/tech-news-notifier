@@ -35,7 +35,7 @@ async function fetchArticleBody(url: string): Promise<string | null> {
     const response = await axios.get(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; TechNewsNotifier/1.0; +https://github.com/tech-news-notifier)",
+          "Mozilla/5.0 (compatible; GossipAI/1.0; +https://github.com/kushankurdas/tech-news-notifier)",
         Accept: "text/html",
       },
       timeout: 8000,

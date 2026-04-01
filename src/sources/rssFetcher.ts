@@ -9,7 +9,7 @@ const parser = new Parser({
     item: [["media:thumbnail", "mediaThumbnail"]],
   },
   headers: {
-    "User-Agent": "TechNewsNotifier/1.0 (RSS Reader)",
+    "User-Agent": "GossipAI/1.0 (RSS Reader)",
     "Accept": "application/rss+xml, application/xml, text/xml, */*",
   },
   timeout: 10000,

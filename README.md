@@ -1,6 +1,6 @@
-# Tech News Notifier
+# Gossip AI
 
-A Dockerized Node.js/TypeScript service that polls popular tech news sources and sends notifications to **Email** and/or **Slack** whenever new articles appear — no manual browsing required.
+AI-curated tech news: a Dockerized Node.js/TypeScript service that polls popular tech news sources and sends notifications to **Email** and/or **Slack** whenever new articles appear — no manual browsing required.
 
 **Requirements:** Node.js 20+ (or Docker)
 
@@ -147,7 +147,7 @@ Use this when the notifier runs in Compose but Ollama runs as a **separate** app
    OPENAI_MODEL=llama3.1
    ```
 
-On **Linux**, `host.docker.internal` is not always defined. You can add to the `tech-news-notifier` service in Compose: `extra_hosts: - "host.docker.internal:host-gateway"`, or set `OPENAI_BASE_URL` to your host LAN IP (e.g. `http://192.168.1.10:11434/v1`).
+On **Linux**, `host.docker.internal` is not always defined. You can add to the `gossip-ai` service in Compose: `extra_hosts: - "host.docker.internal:host-gateway"`, or set `OPENAI_BASE_URL` to your host LAN IP (e.g. `http://192.168.1.10:11434/v1`).
 
 ### 3. Run locally (development)
 
@@ -467,7 +467,7 @@ Contributions are welcome! Here's how to get started:
 
 ```bash
 git clone <repo-url>
-cd tech-news-notifier
+cd gossip-ai
 npm install
 cp .env.example .env
 # Configure at minimum one notifier (EMAIL_ENABLED or SLACK_ENABLED)

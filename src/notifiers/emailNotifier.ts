@@ -94,13 +94,13 @@ function buildHtmlEmail(articles: Article[], config: AppConfig): string {
 </head>
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;padding:24px;margin:0;">
   <div style="max-width:680px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-    <h1 style="font-size:22px;color:#111827;margin:0 0 4px;">Tech News Update</h1>
+    <h1 style="font-size:22px;color:#111827;margin:0 0 4px;">Gossip AI</h1>
     <p style="font-size:14px;color:#6b7280;margin:0 0 24px;">${subtitle}</p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       ${body}
     </table>
     <p style="margin-top:32px;font-size:12px;color:#9ca3af;text-align:center;">
-      Sent by Tech News Notifier &nbsp;·&nbsp; Made with ❤️
+      Sent by Gossip AI &nbsp;·&nbsp; Made with ❤️
     </p>
   </div>
 </body>
@@ -153,7 +153,7 @@ export async function sendEmailNotification(
     });
 
     const uniqueSources = [...new Set(articles.map((a) => a.source))].slice(0, 3);
-    const subject = `[Tech News] ${articles.length} new ${articles.length === 1 ? "article" : "articles"} from ${uniqueSources.join(", ")}`;
+    const subject = `[Gossip AI] ${articles.length} new ${articles.length === 1 ? "article" : "articles"} from ${uniqueSources.join(", ")}`;
 
     await transporter.sendMail({
       from: email.from,
