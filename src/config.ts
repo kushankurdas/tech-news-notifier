@@ -154,13 +154,17 @@ export function loadConfig(): AppConfig {
     ai: (() => {
       const openaiBaseUrl = optionalEnv("OPENAI_BASE_URL").trim().replace(/\/$/, "");
       const openaiApiKeyRaw = optionalEnv("OPENAI_API_KEY").trim();
-      const enabled = !!(openaiApiKeyRaw || openaiBaseUrl);
+      const anthropicApiKey = optionalEnv("ANTHROPIC_API_KEY").trim();
+      const enabled = !!(openaiApiKeyRaw || openaiBaseUrl || anthropicApiKey);
       const openaiApiKey = openaiApiKeyRaw || (openaiBaseUrl ? "ollama" : "");
       return {
         enabled,
+        openaiApiKeyRaw,
         openaiApiKey,
         openaiBaseUrl,
         model: optionalEnv("OPENAI_MODEL", "gpt-4o-mini"),
+        anthropicApiKey,
+        anthropicModel: optionalEnv("ANTHROPIC_MODEL", "claude-3-5-haiku-20241022"),
         topicFilter: optionalEnv(
           "AI_TOPIC_FILTER",
           "software engineering, AI/ML, cloud infrastructure, developer tools, cybersecurity, open source"

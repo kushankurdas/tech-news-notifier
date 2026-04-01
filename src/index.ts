@@ -37,13 +37,21 @@ async function main(): Promise<void> {
     logger.info(`Digest mode: notifications at hour(s) ${config.digestHours.join(", ")} (local time)`);
   }
 
-  logger.info(
-    `AI: ${
-      config.ai.enabled
-        ? `enabled (${config.ai.model}${config.ai.openaiBaseUrl ? ` @ ${config.ai.openaiBaseUrl}` : ""})`
-        : "disabled (using excerpts)"
-    }`
-  );
+  if (config.ai.enabled) {
+    const chain: string[] = [];
+    if (config.ai.openaiApiKeyRaw && !config.ai.openaiBaseUrl) {
+      chain.push(`OpenAI (${config.ai.model})`);
+    }
+    if (config.ai.anthropicApiKey) {
+      chain.push(`Anthropic (${config.ai.anthropicModel})`);
+    }
+    if (config.ai.openaiBaseUrl) {
+      chain.push(`local LLM (${config.ai.model} @ ${config.ai.openaiBaseUrl})`);
+    }
+    logger.info(`AI: enabled — try in order: ${chain.join(" → ")}`);
+  } else {
+    logger.info("AI: disabled (using excerpts)");
+  }
 
   if (config.fetchFullArticles) {
     logger.info("Full article fetch: enabled");
