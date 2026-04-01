@@ -16,7 +16,7 @@ let isShuttingDown = false;
 let activeCyclePromise: Promise<void> | null = null;
 
 async function main(): Promise<void> {
-  logger.info("Tech News Notifier starting up...");
+  logger.info("Gossip AI starting up...");
 
   const config = loadConfig();
 

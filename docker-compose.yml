@@ -7,7 +7,7 @@ services:
   # In .env set OPENAI_BASE_URL=http://ollama:11434/v1 and OPENAI_MODEL to match the pull.
   ollama:
     image: ollama/ollama:latest
-    container_name: tech-news-ollama
+    container_name: gossip-ai-ollama
     profiles: ["llm-local"]
     restart: unless-stopped
     volumes:
@@ -23,11 +23,11 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-  tech-news-notifier:
+  gossip-ai:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: tech-news-notifier
+    container_name: gossip-ai
     restart: unless-stopped
     env_file:
       - .env

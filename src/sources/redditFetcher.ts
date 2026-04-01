@@ -45,7 +45,7 @@ export async function fetchRedditJSON(source: SourceConfig): Promise<Article[]> 
     const response = await withRetry(() =>
       axios.get<RedditListing>(jsonUrl, {
         headers: {
-          "User-Agent": "TechNewsNotifier/1.0 (tech news aggregator; open source)",
+          "User-Agent": "GossipAI/1.0 (tech news aggregator; open source)",
           Accept: "application/json",
         },
         timeout: 15000,

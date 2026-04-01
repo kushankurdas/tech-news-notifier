@@ -56,7 +56,7 @@ export async function fetchDailyDev(_source: SourceConfig): Promise<Article[]> {
         {
           headers: {
             "Content-Type": "application/json",
-            "User-Agent": "TechNewsNotifier/1.0 (tech news aggregator)",
+            "User-Agent": "GossipAI/1.0 (tech news aggregator)",
             Referer: "https://app.daily.dev/",
           },
           timeout: 30000,

@@ -28,7 +28,7 @@ function digestTitle(): string {
     hour >= s.from && hour <= s.to
   ) ?? { label: "Update" };
 
-  return `Tech News Digest — ${day} ${date} · ${slot.label}`;
+  return `Gossip AI — ${day} ${date} · ${slot.label}`;
 }
 
 // ─── Category / sentiment helpers ────────────────────────────────────────────
