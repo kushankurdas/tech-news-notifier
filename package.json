@@ -3,11 +3,21 @@
   "version": "1.0.0",
   "description": "Gossip AI — real-time tech news aggregator with Email & Slack notifications",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kushankurdas/tech-news-notifier.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kushankurdas/tech-news-notifier/issues"
+  },
+  "homepage": "https://github.com/kushankurdas/tech-news-notifier#readme",
   "scripts": {
-    "build": "tsc",
-    "start": "tsc && node dist/index.js",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "tsc -p tsconfig.build.json && node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
@@ -27,6 +37,7 @@
     "@typescript-eslint/parser": "^8.57.2",
     "eslint": "^10.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "vitest": "^3.0.5"
   }
 }

@@ -70,12 +70,12 @@ export function loadConfig(): AppConfig {
         url: "https://api.daily.dev/graphql",
         enabled: optionalEnv("SOURCE_DAILYDEV_ENABLED", "true") === "true",
       },
-      // {
-      //   name: "Dev.to",
-      //   type: "rss",
-      //   url: "https://dev.to/feed",
-      //   enabled: optionalEnv("SOURCE_DEVTO_ENABLED", "true") === "true",
-      // },
+      {
+        name: "Dev.to",
+        type: "rss",
+        url: "https://dev.to/feed",
+        enabled: optionalEnv("SOURCE_DEVTO_ENABLED", "false") === "true",
+      },
       {
         name: "IEEE Spectrum",
         type: "rss",
