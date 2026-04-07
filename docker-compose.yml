@@ -37,7 +37,7 @@ services:
     environment:
       - NODE_ENV=production
       - DATA_DIR=/app/data
-      - TZ=Asia/Kolkata
+      # Set TZ in .env (e.g. TZ=America/New_York) so digest hours match your local day; omit for UTC
     # Optional: resource limits
     deploy:
       resources:

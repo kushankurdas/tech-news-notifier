@@ -25,6 +25,7 @@
 
 - [ ] Code compiles without errors (`npm run build`)
 - [ ] Lint passes (`npm run lint`)
+- [ ] Tests pass (`npm test`)
 - [ ] `.env.example` updated if new environment variables were added
 - [ ] README updated if behaviour or configuration changed
 - [ ] No secrets, credentials, or personal data included

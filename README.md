@@ -13,6 +13,7 @@ AI-curated tech news: a Dockerized Node.js/TypeScript service that polls popular
 | Reddit r/webdev | Reddit API | `SOURCE_REDDIT_WEBDEV_ENABLED` |
 | Reddit r/javascript | Reddit API | `SOURCE_REDDIT_JS_ENABLED` |
 | daily.dev | GraphQL API | `SOURCE_DAILYDEV_ENABLED` |
+| Dev.to | RSS | `SOURCE_DEVTO_ENABLED` |
 | IEEE Spectrum | RSS | `SOURCE_IEEE_ENABLED` |
 | AWS What's New | RSS | `SOURCE_AWS_ENABLED` |
 | Techmeme | RSS | `SOURCE_TECHMEME_ENABLED` |
@@ -392,6 +393,7 @@ All config is via environment variables (see `.env.example`).
 | `SOURCE_REDDIT_WEBDEV_ENABLED` | `true` | Reddit r/webdev |
 | `SOURCE_REDDIT_JS_ENABLED` | `true` | Reddit r/javascript |
 | `SOURCE_DAILYDEV_ENABLED` | `true` | daily.dev |
+| `SOURCE_DEVTO_ENABLED` | `false` | Dev.to |
 | `SOURCE_IEEE_ENABLED` | `true` | IEEE Spectrum |
 | `SOURCE_AWS_ENABLED` | `true` | AWS What's New |
 | `SOURCE_TECHMEME_ENABLED` | `true` | Techmeme |
@@ -408,6 +410,7 @@ All config is via environment variables (see `.env.example`).
 | `DATA_DIR` | `./data` | Directory for seen-articles and stats persistence |
 | `SEEN_MAX_AGE_DAYS` | `14` | Days to retain seen article IDs before pruning |
 | `LOG_LEVEL` | `info` | Logging verbosity (`error`, `warn`, `info`, `debug`) |
+| `TZ` | _(unset)_ | IANA timezone (e.g. `America/New_York`) for digest hours; in Docker, set via `.env` (omit for UTC) |
 
 ## Personalized Relevance Scoring
 
@@ -466,8 +469,8 @@ Contributions are welcome! Here's how to get started:
 ### Setup
 
 ```bash
-git clone <repo-url>
-cd gossip-ai
+git clone https://github.com/kushankurdas/tech-news-notifier.git
+cd tech-news-notifier
 npm install
 cp .env.example .env
 # Configure at minimum one notifier (EMAIL_ENABLED or SLACK_ENABLED)
@@ -480,6 +483,7 @@ npm run dev
 npm run dev      # Run with ts-node (no build step, watches .env)
 npm run build    # Compile TypeScript to dist/
 npm run lint     # ESLint
+npm test         # Unit tests (Vitest)
 ```
 
 The service logs a cycle summary on every run:
@@ -507,9 +511,10 @@ Use `LOG_LEVEL=debug` to see per-article decisions (Jaccard grouping, AI cluster
 
 1. `npm run build` — must compile with no errors
 2. `npm run lint` — must pass
-3. If adding env variables: update `.env.example` and the Configuration Reference in this README
-4. If adding a source type: update the `SourceConfig.type` union in `src/types.ts`
-5. For larger changes, open an issue first to discuss the approach
+3. `npm test` — must pass
+4. If adding env variables: update `.env.example` and the Configuration Reference in this README
+5. If adding a source type: update the `SourceConfig.type` union in `src/types.ts`
+6. For larger changes, open an issue first to discuss the approach
 
 ## License
 
